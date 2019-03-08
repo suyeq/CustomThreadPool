@@ -31,14 +31,24 @@ public class WorkThread implements Runnable {
     }
 
     public void run() {
-        runWork(this);
+        try {
+            runWork(this);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
-    public void runWork(WorkThread workThread){
+    public void runWork(WorkThread workThread) throws InterruptedException {
         Thread thread=Thread.currentThread();
         Runnable task=firstTask;
         firstTask=null;
+        while (task!=null || (task=pool.getTask())!=null){
+            lock.lock();
+            task.run();
+            task=null;
+            lock.unlock();
+        }
     }
 
 }

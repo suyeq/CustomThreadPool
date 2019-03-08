@@ -48,16 +48,16 @@ public class SuyeThreadPoolState {
      * 获得线程池中工作者线程的数量
      * @return
      */
-    private int getWorkThreadSize(){
-        return (getpPoolSizeAndState()&poolThreadSize)<<2;
+    public int getWorkThreadSize(){
+        return (getPoolSizeAndState()&poolThreadSize)<<2;
     }
 
     /**
      * 获得线程池的状态
      * @return
      */
-    private int getPoolState(){
-        return getpPoolSizeAndState()&poolState;
+    public int getPoolState(){
+        return getPoolSizeAndState()&poolState;
     }
 
     /**
@@ -75,7 +75,7 @@ public class SuyeThreadPoolState {
      * @return
      */
     public boolean setPoolStateToStop(){
-        return poolStateAndWorkThreadSize.compareAndSet(getpPoolSizeAndState(),poolStateMergeSize(getWorkThreadSize()<<2,STOP));
+        return poolStateAndWorkThreadSize.compareAndSet(getPoolSizeAndState(),poolStateMergeSize(getWorkThreadSize()<<2,STOP));
     }
 
     /**
@@ -83,7 +83,7 @@ public class SuyeThreadPoolState {
      * @return
      */
     public boolean setPoolStateToDestroy(){
-        return poolStateAndWorkThreadSize.compareAndSet(getpPoolSizeAndState(),poolStateMergeSize(getWorkThreadSize()<<2,DESTROY));
+        return poolStateAndWorkThreadSize.compareAndSet(getPoolSizeAndState(),poolStateMergeSize(getWorkThreadSize()<<2,DESTROY));
     }
 
     /**
@@ -100,8 +100,20 @@ public class SuyeThreadPoolState {
         }
     }
 
-    public int getpPoolSizeAndState(){
+    public int getPoolSizeAndState(){
         return poolStateAndWorkThreadSize.get();
+    }
+
+    public int RunState(){
+        return RUN;
+    }
+
+    public int StopState(){
+        return STOP;
+    }
+
+    public int DestroyState(){
+        return DESTROY;
     }
 
 }
