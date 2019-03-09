@@ -67,25 +67,41 @@ public class SuyeThreadPool implements Executor {
         this.threadRepository=ThreadRepository.newInstance();
     }
 
+    public SuyeThreadPool(int theMostPoolThreadSize,int taskQueueSize){
+        this.bestPoolThreadSize=Runtime.getRuntime().availableProcessors();
+        this.theMostPoolThreadSize=theMostPoolThreadSize;
+        this.taskQueue=new LinkedBlockingQueue<Runnable>(taskQueueSize);
+        this.workThreadSet=new HashSet<WorkThread>();
+        this.suyeThreadPoolState=SuyeThreadPoolState.getInstance();
+        this.threadRepository=ThreadRepository.newInstance();
+    }
+
     public void execute(Runnable command) {
         if (command==null){
             throw new NullPointerException();
         }
         int poolThreadSize=suyeThreadPoolState.getWorkThreadSize();
+
         if (poolThreadSize<bestPoolThreadSize){
             if (addWorkThread(command)){
                 return;
             }
         }else if (taskQueue.offer(command)){
+            System.out.println("插入任务队列，不创建新的线程");
             return;
-        }else if ((!taskQueue.offer(command)) && (poolThreadSize<theMostPoolThreadSize)){
+        }else if (!taskQueue.offer(command) && (poolThreadSize<theMostPoolThreadSize)){
             if (addWorkThread(command)){
+                System.out.println("任务队列已满，且线程池中工作者线程数量小于最大数量，则创建新的线程");
                 return;
             }
+        }else {
+            //执行拒绝策略
+            System.out.println("拒绝该任务");
+            return;
         }
     }
 
-    public boolean addWorkThread(Runnable firstTask){
+    private boolean addWorkThread(Runnable firstTask){
         retry:
         for (;;){
             /**
@@ -95,7 +111,9 @@ public class SuyeThreadPool implements Executor {
              */
             int poolState=suyeThreadPoolState.getPoolState();
             int poolThreadSize=suyeThreadPoolState.getWorkThreadSize();
-            if (taskQueue.isEmpty() || firstTask==null){
+            System.out.println("poolThreadSize:"+poolThreadSize);
+            System.out.println("poolState:"+poolState);
+            if (taskQueue.isEmpty() && firstTask==null){
                return false;
             }else if (poolState>=suyeThreadPoolState.StopState()){
                 return false;
@@ -132,6 +150,7 @@ public class SuyeThreadPool implements Executor {
             try {
                 Runnable task=taskQueue.take();
                 if (task!=null){
+                    System.out.println("从任务队列中取得线程");
                     return task;
                 }
             } catch (InterruptedException e) {
@@ -141,4 +160,7 @@ public class SuyeThreadPool implements Executor {
     }
 
 
+    public int getWorkThreadSize() {
+        return workThreadSize;
+    }
 }

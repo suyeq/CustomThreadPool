@@ -28,11 +28,17 @@ public class SuyeThreadPoolState {
     //         */
     //        DESTROY
 
-    private final int RUN=Integer.MAX_VALUE-3;
+//    private final int RUN=Integer.MAX_VALUE-3;
+//
+//    private final int STOP=Integer.MAX_VALUE-2;
+//
+//    private final int DESTROY=Integer.MAX_VALUE-1;
 
-    private final int STOP=Integer.MAX_VALUE-2;
+    private final int RUN=0;
 
-    private final int DESTROY=Integer.MAX_VALUE-1;
+    private final int STOP=1;
+
+    private final int DESTROY=2;
 
     private final int poolState=(1<<2)-1;
 
@@ -49,7 +55,7 @@ public class SuyeThreadPoolState {
      * @return
      */
     public int getWorkThreadSize(){
-        return (getPoolSizeAndState()&poolThreadSize)<<2;
+        return (getPoolSizeAndState()&poolThreadSize)>>2;
     }
 
     /**
@@ -75,7 +81,7 @@ public class SuyeThreadPoolState {
      * @return
      */
     public boolean setPoolStateToStop(){
-        return poolStateAndWorkThreadSize.compareAndSet(getPoolSizeAndState(),poolStateMergeSize(getWorkThreadSize()<<2,STOP));
+        return poolStateAndWorkThreadSize.compareAndSet(getPoolSizeAndState(),poolStateMergeSize(STOP,getWorkThreadSize()));
     }
 
     /**
@@ -83,7 +89,14 @@ public class SuyeThreadPoolState {
      * @return
      */
     public boolean setPoolStateToDestroy(){
-        return poolStateAndWorkThreadSize.compareAndSet(getPoolSizeAndState(),poolStateMergeSize(getWorkThreadSize()<<2,DESTROY));
+        return poolStateAndWorkThreadSize.compareAndSet(getPoolSizeAndState(),poolStateMergeSize(DESTROY,getWorkThreadSize()));
+    }
+
+    public int increasePoolThreadSize(){
+        int poolThreadSize=getWorkThreadSize();
+        int newPoolThreadSize=poolThreadSize+1;
+        poolStateAndWorkThreadSize.compareAndSet(getPoolSizeAndState(),poolStateMergeSize(getPoolState(),newPoolThreadSize));
+        return newPoolThreadSize;
     }
 
     /**

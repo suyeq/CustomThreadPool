@@ -41,14 +41,19 @@ public class WorkThread implements Runnable {
 
     public void runWork(WorkThread workThread) throws InterruptedException {
         Thread thread=Thread.currentThread();
-        Runnable task=firstTask;
+        Runnable task=workThread.firstTask;
         firstTask=null;
         while (task!=null || (task=pool.getTask())!=null){
             lock.lock();
+            System.out.println("任务执行中");
             task.run();
+            System.out.println("任务执行完成");
             task=null;
             lock.unlock();
         }
     }
 
+    public Thread getThread() {
+        return thread;
+    }
 }

@@ -1,3 +1,9 @@
+import suyeq.SuyeThreadPool;
+import suyeq.SuyeThreadPoolState;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -27,5 +33,30 @@ public class Test {
         int a=(run&poolThreadSize)>>2;
         System.out.println("合并为："+Integer.toBinaryString(run|(a<<2)));
 
+    }
+    @org.junit.Test
+    public void test1(){
+        SuyeThreadPoolState state=SuyeThreadPoolState.getInstance();
+        System.out.println(Integer.toBinaryString(state.getPoolSizeAndState()));
+        System.out.println("------------");
+        System.out.println(state.setPoolStateToStop());
+        System.out.println(Integer.toBinaryString(state.getPoolSizeAndState()));
+        System.out.println("------------");
+        System.out.println(state.setPoolStateToDestroy());
+        System.out.println(Integer.toBinaryString(state.getPoolSizeAndState()));
+        System.out.println("------------");
+        System.out.println(Integer.toBinaryString(state.getWorkThreadSize()));
+        System.out.println("------------");
+        System.out.println(Integer.toBinaryString(state.getPoolState()));
+        System.out.println("------------");
+        System.out.println(state.increasePoolThreadSize());
+        System.out.println(Integer.toBinaryString(state.getPoolSizeAndState()));
+        System.out.println("------------");
+    }
+    @org.junit.Test
+    public void test3() throws InterruptedException {
+        BlockingQueue<String> queue=new LinkedBlockingQueue<String>();
+        queue.take();
+        System.out.println("alalla");
     }
 }
