@@ -36,6 +36,8 @@ public class SuyeThreadPool implements Executor {
      * 存放工作者线程的集合
      */
     private final HashSet<WorkThread> workThreadSet;
+
+    private volatile int workThreadSize;
     /**
      * 保存线程池的状态
      */
@@ -65,8 +67,22 @@ public class SuyeThreadPool implements Executor {
         this.threadRepository=ThreadRepository.newInstance();
     }
 
-    public void execute(Runnable firstTask) {
-
+    public void execute(Runnable command) {
+        if (command==null){
+            throw new NullPointerException();
+        }
+        int poolThreadSize=suyeThreadPoolState.getWorkThreadSize();
+        if (poolThreadSize<bestPoolThreadSize){
+            if (addWorkThread(command)){
+                return;
+            }
+        }else if (taskQueue.offer(command)){
+            return;
+        }else if ((!taskQueue.offer(command)) && (poolThreadSize<theMostPoolThreadSize)){
+            if (addWorkThread(command)){
+                return;
+            }
+        }
     }
 
     public boolean addWorkThread(Runnable firstTask){
@@ -99,7 +115,9 @@ public class SuyeThreadPool implements Executor {
                 throw new IllegalStateException();
             }
             workThreadSet.add(workThread);
-
+            workThreadSize=suyeThreadPoolState.increasePoolThreadSize();
+            this.mainLock.unlock();
+            thread.start();
         }
         return true;
     }
