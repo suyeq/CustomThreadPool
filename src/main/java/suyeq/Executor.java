@@ -10,7 +10,7 @@ package suyeq;
 public interface Executor {
     /**
      * 向线程池提交任务
-     * @param runnable
+     * @param task
      */
-    void execute(Runnable runnable);
+    void execute(Runnable task);
 }

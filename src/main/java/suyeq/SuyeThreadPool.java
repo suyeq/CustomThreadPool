@@ -4,9 +4,7 @@ package suyeq;
 import javafx.concurrent.Worker;
 
 import java.util.HashSet;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @date: 2019-03-07
  * @time: 19:57
  */
-public class SuyeThreadPool implements Executor {
+public class SuyeThreadPool implements ExecutorService {
 
     /**
      * 线程池最高效率执行的工作线程数
@@ -36,7 +34,9 @@ public class SuyeThreadPool implements Executor {
      * 存放工作者线程的集合
      */
     private final HashSet<WorkThread> workThreadSet;
-
+    /**
+     * 工作者线程的数量
+     */
     private volatile int workThreadSize;
     /**
      * 保存线程池的状态
@@ -76,34 +76,47 @@ public class SuyeThreadPool implements Executor {
         this.threadRepository=ThreadRepository.newInstance();
     }
 
+    /**
+     * 提交任务
+     * @param command
+     */
     public void execute(Runnable command) {
         if (command==null){
             throw new NullPointerException();
         }
         int poolThreadSize=suyeThreadPoolState.getWorkThreadSize();
-
+        int poolState=suyeThreadPoolState.getPoolState();
+        int RunState=suyeThreadPoolState.RunState();
         if (poolThreadSize<bestPoolThreadSize){
             if (addWorkThread(command)){
                 return;
             }
-        }else if (taskQueue.offer(command)){
+            poolState=suyeThreadPoolState.getPoolState();
+        }
+        if (poolState==RunState && taskQueue.offer(command)){
             System.out.println("插入任务队列，不创建新的线程");
             return;
-        }else if (!taskQueue.offer(command) && (poolThreadSize<theMostPoolThreadSize)){
+        }
+        poolState=suyeThreadPoolState.getPoolState();
+        if (poolState==RunState && !taskQueue.offer(command) && (poolThreadSize<theMostPoolThreadSize)){
             if (addWorkThread(command)){
                 System.out.println("任务队列已满，且线程池中工作者线程数量小于最大数量，则创建新的线程");
                 return;
             }
-        }else {
-            //执行拒绝策略
-            System.out.println("拒绝该任务");
-            return;
         }
+        //执行拒绝策略
+        System.out.println("拒绝该任务");
+        return;
     }
 
+    /**
+     * 增加工作者线程
+     * @param firstTask
+     * @return
+     */
     private boolean addWorkThread(Runnable firstTask){
-        retry:
-        for (;;){
+//        retry:
+//        for (;;){
             /**
              * 如果线程池的状态大于Stop或者任务队列为null
              * 又或者线程第一个任务为null，那么就拒绝创建新的线程
@@ -119,15 +132,18 @@ public class SuyeThreadPool implements Executor {
                 return false;
             }else if(poolThreadSize>=theMostPoolThreadSize){
                 return false;
-            }else {
-                break retry;
             }
-        }
-        WorkThread workThread=new WorkThread(firstTask,threadRepository,this);
+//            else {
+//                break retry;
+//            }
+//        }
+        WorkThread workThread=new WorkThread(firstTask);
         if (workThread!=null){
-            int poolThreadSize=suyeThreadPoolState.getWorkThreadSize();
-            int poolState=suyeThreadPoolState.getPoolState();
-            final Thread thread=workThread.getThread();
+            final Thread thread=workThread.thread;
+            /**
+             * 防止在其他线程中提交任务
+             * 因而需要加锁
+             */
             this.mainLock.lock();
             if (thread.isAlive()){
                 throw new IllegalStateException();
@@ -140,7 +156,11 @@ public class SuyeThreadPool implements Executor {
         return true;
     }
 
-    public Runnable getTask(){
+    /**
+     * 从任务队列中获取任务
+     * @return
+     */
+    private Runnable getTask(){
         while (true){
             int poolState=suyeThreadPoolState.getPoolState();
             if (poolState>=suyeThreadPoolState.StopState() || taskQueue.isEmpty()){
@@ -159,8 +179,92 @@ public class SuyeThreadPool implements Executor {
         }
     }
 
+    /**
+     * 工作者线程运行
+     * @param workThread
+     * @throws InterruptedException
+     */
+    private void runWork(WorkThread workThread) throws InterruptedException {
+        Thread thread=Thread.currentThread();
+        Runnable task=workThread.firstTask;
+        workThread.firstTask=null;
+        while (task!=null || (task=getTask())!=null){
+            workThread.lock.lock();
+            System.out.println("任务执行中");
+            task.run();
+            System.out.println("任务执行完成");
+            task=null;
+            workThread.lock.unlock();
+        }
+    }
 
+    /**
+     * 终止线程池，让线程池不再接受新的任务
+     * 但可以处理任务队列中的任务
+     */
+    public void shutdown() {
+        suyeThreadPoolState.setPoolStateToStop();
+    }
+
+    /**
+     * 判断线程池是否被终止
+     * @return
+     */
+    public boolean isShutdown() {
+        return suyeThreadPoolState.getPoolState() >= suyeThreadPoolState.StopState();
+    }
+
+    /**
+     * 指定返回结果的提交方法
+     * @param task
+     * @param result
+     * @param <T>
+     * @return
+     */
+    public <T>Future<T> submit(final Runnable task, final T result) {
+        FutureTask<T> future=new FutureTask<T>(new Callable<T>() {
+            public T call() throws Exception {
+                task.run();
+                return result;
+            }
+        });
+        execute(future);
+        return future;
+    }
+
+    /**
+     * 返回工作者线程数量
+     * @return
+     */
     public int getWorkThreadSize() {
         return workThreadSize;
     }
+
+    /**
+     * 封装的工作者线程
+     */
+    class WorkThread implements Runnable {
+
+        private Lock lock;
+
+        private Runnable firstTask;
+
+        private Thread thread;
+
+        public WorkThread(Runnable firstTask){
+            this.firstTask=firstTask;
+            thread=threadRepository.newThread(this);
+            lock=new ReentrantLock();
+        }
+
+        public void run() {
+            try {
+                runWork(this);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
 }
