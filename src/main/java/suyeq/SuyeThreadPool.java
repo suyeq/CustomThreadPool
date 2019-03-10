@@ -47,9 +47,12 @@ public class SuyeThreadPool implements ExecutorService {
 
     private final Condition mainCondition=mainLock.newCondition();
 
+    private int rejectStrategy;
+
     public SuyeThreadPool(){
         this.bestPoolThreadSize=Runtime.getRuntime().availableProcessors();
         this.theMostPoolThreadSize=bestPoolThreadSize;
+        rejectStrategy=RejectionStrategy.ABANDONED;
         this.taskQueue=new LinkedBlockingQueue<Runnable>(theMostPoolThreadSize*2);
         this.workThreadSet=new HashSet<WorkThread>();
         this.suyeThreadPoolState=SuyeThreadPoolState.getInstance();
@@ -59,15 +62,17 @@ public class SuyeThreadPool implements ExecutorService {
     public SuyeThreadPool(int theMostPoolThreadSize){
         this.bestPoolThreadSize=Runtime.getRuntime().availableProcessors();
         this.theMostPoolThreadSize=theMostPoolThreadSize;
+        rejectStrategy=RejectionStrategy.ABANDONED;
         this.taskQueue=new LinkedBlockingQueue<Runnable>(theMostPoolThreadSize*2);
         this.workThreadSet=new HashSet<WorkThread>();
         this.suyeThreadPoolState=SuyeThreadPoolState.getInstance();
         this.threadRepository=ThreadRepository.newInstance();
     }
 
-    public SuyeThreadPool(int theMostPoolThreadSize,int taskQueueSize){
+    public SuyeThreadPool(int theMostPoolThreadSize,int taskQueueSize,int rejectStrategy){
         this.bestPoolThreadSize=Runtime.getRuntime().availableProcessors();
         this.theMostPoolThreadSize=theMostPoolThreadSize;
+        this.rejectStrategy=rejectStrategy;
         this.taskQueue=new LinkedBlockingQueue<Runnable>(taskQueueSize);
         this.workThreadSet=new HashSet<WorkThread>();
         this.suyeThreadPoolState=SuyeThreadPoolState.getInstance();
@@ -103,7 +108,8 @@ public class SuyeThreadPool implements ExecutorService {
             }
         }
         //执行拒绝策略
-        System.out.println("拒绝该任务");
+        System.out.println("执行拒绝策略");
+        RejectionStrategy.rejectStrategy(command,rejectStrategy);
         return;
     }
 

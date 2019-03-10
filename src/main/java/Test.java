@@ -1,3 +1,4 @@
+import suyeq.RejectionStrategy;
 import suyeq.SuyeThreadPool;
 
 import java.util.concurrent.ExecutionException;
@@ -28,10 +29,10 @@ public class Test {
 
 
     public static void main(String []args){
-        SuyeThreadPool pool=new SuyeThreadPool(6,4);
+        SuyeThreadPool pool=new SuyeThreadPool(6,4, RejectionStrategy.ABANDONED);
         pool.execute(new Task());
-        pool.shutdown();
-        System.out.println(pool.isShutdown());
+//        pool.shutdown();
+//        System.out.println(pool.isShutdown());
 //        Future<String> future=pool.submit(new Task(),"成功返回啦");
 //        try {
 //            System.out.println("返回结果为："+future.get());
@@ -40,8 +41,8 @@ public class Test {
 //        } catch (ExecutionException e) {
 //            e.printStackTrace();
 //        }
-        //pool.shutdown();
-//        pool.execute(new Task());
+        pool.shutdown();
+        pool.execute(new Task());
 //        pool.execute(new Task());
 //        pool.execute(new Task());
 //        pool.execute(new Task());
