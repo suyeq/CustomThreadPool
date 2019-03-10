@@ -161,14 +161,25 @@ public class SuyeThreadPool implements ExecutorService {
     }
 
     /**
+     * 将已完成的任务的工作者线程
+     * 从集合中去掉
+     * @param workThread
+     */
+    private void reduceWorkThread(WorkThread workThread){
+        mainLock.lock();
+        workThreadSet.remove(workThread);
+        workThreadSize--;
+        mainLock.unlock();
+    }
+
+    /**
      * 从任务队列中获取任务
      * @return
      */
-    private Runnable getTask(){
+    private Runnable getTask(WorkThread workThread){
         while (true){
-            int poolState=suyeThreadPoolState.getPoolState();
-            if (poolState>=suyeThreadPoolState.StopState() || taskQueue.isEmpty()){
-                //减少线程池的线程数量方法
+            if (taskQueue.isEmpty()){
+                reduceWorkThread(workThread);
                 return null;
             }
             try {
@@ -192,11 +203,12 @@ public class SuyeThreadPool implements ExecutorService {
         Thread thread=Thread.currentThread();
         Runnable task=workThread.firstTask;
         workThread.firstTask=null;
-        while (task!=null || (task=getTask())!=null){
+        while (task!=null || (task=getTask(workThread))!=null){
             workThread.lock.lock();
             System.out.println("任务执行中");
             task.run();
             System.out.println("任务执行完成");
+            workThread.completeTask++;
             task=null;
             workThread.lock.unlock();
         }
@@ -254,6 +266,8 @@ public class SuyeThreadPool implements ExecutorService {
         private Runnable firstTask;
 
         private Thread thread;
+
+        private volatile int completeTask=0;
 
         public WorkThread(Runnable firstTask){
             this.firstTask=firstTask;

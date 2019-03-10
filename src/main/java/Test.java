@@ -41,21 +41,22 @@ public class Test {
 //        } catch (ExecutionException e) {
 //            e.printStackTrace();
 //        }
-        pool.shutdown();
+
         pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
-//        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        pool.execute(new Task());
+        //pool.shutdown();
         System.out.println(pool.getWorkThreadSize());
     }
 }
