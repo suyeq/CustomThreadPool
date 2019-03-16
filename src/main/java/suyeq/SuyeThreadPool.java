@@ -2,6 +2,7 @@ package suyeq;
 
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -199,11 +200,14 @@ public class SuyeThreadPool implements ExecutorService {
      * @param workThread
      * @throws InterruptedException
      */
-    private void runWork(WorkThread workThread) throws InterruptedException {
+    private void runWork(WorkThread workThread) throws InterruptedException{
         Thread thread=Thread.currentThread();
         Runnable task=workThread.firstTask;
         workThread.firstTask=null;
         while (task!=null || (task=getTask(workThread))!=null){
+            if (thread.isInterrupted()){
+                throw new InterruptedException();
+            }
             workThread.lock.lock();
             System.out.println("任务执行中");
             task.run();
@@ -276,13 +280,37 @@ public class SuyeThreadPool implements ExecutorService {
         }
 
         public void run() {
+            boolean isInterrupt=false;
             try {
                 runWork(this);
             } catch (InterruptedException e) {
+                System.out.println("中断线程中断");
+                isInterrupt=true;
                 e.printStackTrace();
+            }finally {
+                if (isInterrupt){
+                    reduceWorkThread(this);
+                    System.out.println("处理中断啦");
+                }
             }
         }
 
+        /**
+         * 测试
+         * @return
+         */
+        public Thread getThread(){
+            return thread;
+        }
+
+    }
+
+    /**
+     * 测试
+     * @return
+     */
+    public Thread get(){
+        return workThreadSet.iterator().next().getThread();
     }
 
 }
