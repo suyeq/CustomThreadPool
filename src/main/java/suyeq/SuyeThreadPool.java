@@ -3,6 +3,8 @@ package suyeq;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -177,20 +179,16 @@ public class SuyeThreadPool implements ExecutorService {
      * 从任务队列中获取任务
      * @return
      */
-    private Runnable getTask(WorkThread workThread){
+    private Runnable getTask(WorkThread workThread) throws InterruptedException{
         while (true){
             if (taskQueue.isEmpty()){
                 reduceWorkThread(workThread);
                 return null;
             }
-            try {
-                Runnable task=taskQueue.take();
-                if (task!=null){
-                    System.out.println("从任务队列中取得线程");
-                    return task;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            Runnable task=taskQueue.take();
+            if (task!=null){
+                System.out.println("从任务队列中取得线程");
+                return task;
             }
         }
     }
@@ -200,7 +198,7 @@ public class SuyeThreadPool implements ExecutorService {
      * @param workThread
      * @throws InterruptedException
      */
-    private void runWork(WorkThread workThread) throws InterruptedException{
+    private void runWork(WorkThread workThread) throws InterruptedException {
         Thread thread=Thread.currentThread();
         Runnable task=workThread.firstTask;
         workThread.firstTask=null;
@@ -292,6 +290,7 @@ public class SuyeThreadPool implements ExecutorService {
                     reduceWorkThread(this);
                     System.out.println("处理中断啦");
                 }
+                return;
             }
         }
 
@@ -309,8 +308,15 @@ public class SuyeThreadPool implements ExecutorService {
      * 测试
      * @return
      */
-    public Thread get(){
-        return workThreadSet.iterator().next().getThread();
+    public List<Thread> get(){
+        List<Thread> list=new LinkedList<Thread>();
+        Iterator iterator=workThreadSet.iterator();
+        while (iterator.hasNext()){
+            Thread thread=((WorkThread)iterator.next()).getThread();
+            list.add(thread);
+        }
+
+        return list;
     }
 
 }
