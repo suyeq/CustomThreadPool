@@ -4,9 +4,7 @@ import suyeq.SuyeThreadPool;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,17 +14,21 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @time: 13:25
  */
 public class Test {
-    static class Task implements Runnable{
+    static class Task implements Runnable  {
         public void run() {
                 int n=10;
                 while (n>0){
                     System.out.println("线程为："+Thread.currentThread().getName());
+
                     try {
                         Thread.sleep(100000);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
                         break;
+                        //e.printStackTrace();
                     }
+
+
+
 //                    if (Thread.currentThread().isInterrupted()){
 //                        break;
 //                    }
@@ -99,7 +101,7 @@ public class Test {
         pool.execute(new Task1());
         Thread.sleep(5000);
         List<InterruptThreadMessage> list=pool.getMaybeNeedInterruptThread();
-        list.get(0).setThreadInter();
+        list.get(0).setThreadInterupte();
         System.out.println("fsddfsdf"+list.get(0).getThreadName());
 //        System.out.println();
 //        Thread thread=list.get(0);
@@ -108,6 +110,8 @@ public class Test {
 //        Object object=new Object();
 //        new Thread(new Task3(object)).start();
 //        new Thread(new Task4(object)).start();
+
+
 
     }
 }

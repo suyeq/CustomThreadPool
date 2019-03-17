@@ -160,7 +160,7 @@ public class SuyeThreadPool implements ExecutorService {
             this.mainLock.unlock();
             thread.start();
             if (!thread.isAlive()){
-                return addWorkThread(firstTask);
+                //创建线程失败，再次创建
             }
         }
         return true;
