@@ -159,6 +159,9 @@ public class SuyeThreadPool implements ExecutorService {
             workThreadSize=suyeThreadPoolState.increasePoolThreadSize();
             this.mainLock.unlock();
             thread.start();
+            if (!thread.isAlive()){
+                return addWorkThread(firstTask);
+            }
         }
         return true;
     }
@@ -203,9 +206,6 @@ public class SuyeThreadPool implements ExecutorService {
         Runnable task=workThread.firstTask;
         workThread.firstTask=null;
         while (task!=null || (task=getTask(workThread))!=null){
-            if (thread.isInterrupted()){
-                throw new InterruptedException();
-            }
             workThread.lock.lock();
             System.out.println("任务执行中");
             task.run();
@@ -213,6 +213,9 @@ public class SuyeThreadPool implements ExecutorService {
             workThread.completeTask++;
             task=null;
             workThread.lock.unlock();
+            if (thread.isInterrupted()){
+                throw new InterruptedException();
+            }
         }
     }
 
@@ -278,44 +281,41 @@ public class SuyeThreadPool implements ExecutorService {
         }
 
         public void run() {
-            boolean isInterrupt=false;
             try {
                 runWork(this);
             } catch (InterruptedException e) {
-                System.out.println("中断线程中断");
-                isInterrupt=true;
+                System.out.println("中断线程了");
                 e.printStackTrace();
             }finally {
-                if (isInterrupt){
-                    reduceWorkThread(this);
-                    System.out.println("处理中断啦");
-                }
+                reduceWorkThread(this);
+                System.out.println("处理中断啦");
+                System.out.println("重连操作开始");
                 return;
             }
-        }
-
-        /**
-         * 测试
-         * @return
-         */
-        public Thread getThread(){
-            return thread;
         }
 
     }
 
     /**
-     * 测试
+     * 获取线程阻塞、限时等待、等待中的线程信息
+     * 是个线程不安全的方法，建议少用主动中断
+     * 但是如果你能确保线程在很长一段时间中会被阻塞或者等待的话
+     * 那么就可以使用主动中断去让阻塞中的线程
+     * 放弃当前任务，而进行下次任务
      * @return
      */
-    public List<Thread> get(){
-        List<Thread> list=new LinkedList<Thread>();
+    public List<InterruptThreadMessage> getMaybeNeedInterruptThread(){
+        List<InterruptThreadMessage> list=new LinkedList<InterruptThreadMessage>();
+        mainLock.lock();
         Iterator iterator=workThreadSet.iterator();
         while (iterator.hasNext()){
-            Thread thread=((WorkThread)iterator.next()).getThread();
-            list.add(thread);
+            WorkThread workThread=(WorkThread)iterator.next();
+            Thread.State state=workThread.thread.getState();
+            if (state== Thread.State.TIMED_WAITING || state== Thread.State.WAITING || state== Thread.State.BLOCKED){
+                list.add(new InterruptThreadMessage(workThread.thread,state,workThread.thread.getName()));
+            }
         }
-
+        mainLock.unlock();
         return list;
     }
 
