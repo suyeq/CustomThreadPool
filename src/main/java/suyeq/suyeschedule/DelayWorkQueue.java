@@ -31,7 +31,7 @@ public class DelayWorkQueue<E> implements BlockingQueue<E> {
 
     @Override
     public boolean add(E e) {
-        return false;
+        return offer(e);
     }
 
     @Override
@@ -69,16 +69,17 @@ public class DelayWorkQueue<E> implements BlockingQueue<E> {
 
     @Override
     public void put(E e) throws InterruptedException {
-
+        offer(e);
     }
 
     @Override
     public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
-        return false;
+        return offer(e);
     }
 
     @Override
     public E take() throws InterruptedException {
+
         return null;
     }
 

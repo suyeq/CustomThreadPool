@@ -113,17 +113,33 @@ public class Test {
 //        new Thread(new Task3(object)).start();
 //        new Thread(new Task4(object)).start();
 
-        FutureTask<String> futureTask=new FutureTask<String>(new Callable<String>() {
+//        FutureTask<String> futureTask=new FutureTask<String>(new Callable<String>() {
+//            @Override
+//            public String call() throws Exception {
+//                System.out.println("啦啦啦啦啦");
+//                //Thread.sleep(5000);
+//                return "执行了";
+//            }
+//        });
+//        //new Thread(futureTask).start();
+//        futureTask.get(6,TimeUnit.SECONDS);
+        ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(1);
+        scheduledThreadPoolExecutor.schedule(new Runnable() {
             @Override
-            public String call() throws Exception {
-                System.out.println("啦啦啦啦啦");
-                //Thread.sleep(5000);
-                return "执行了";
+            public void run() {
+                System.out.println(Thread.currentThread().getName());
+                System.out.println("这里是1");
             }
-        });
-        //new Thread(futureTask).start();
-        futureTask.get(6,TimeUnit.SECONDS);
+        },10,TimeUnit.SECONDS);
 
+        scheduledThreadPoolExecutor.schedule(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName());
+                System.out.println("这里是2");
+            }
+        },10,TimeUnit.SECONDS);
+        scheduledThreadPoolExecutor.shutdown();
 
 
     }
