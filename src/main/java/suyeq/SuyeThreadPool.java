@@ -86,6 +86,7 @@ public class SuyeThreadPool implements ExecutorService {
      * 提交任务
      * @param command
      */
+    @Override
     public void execute(Runnable command) {
         if (command==null){
             throw new NullPointerException();
@@ -182,13 +183,13 @@ public class SuyeThreadPool implements ExecutorService {
      * 从任务队列中获取任务
      * @return
      */
-    private Runnable getTask(WorkThread workThread) throws InterruptedException{
+    private Runnable getTask(WorkThread workThread,boolean isLimitedTime) throws InterruptedException{
         while (true){
             if (taskQueue.isEmpty()){
                 reduceWorkThread(workThread);
                 return null;
             }
-            Runnable task=taskQueue.take();
+            Runnable task=isLimitedTime ? taskQueue.poll(3,TimeUnit.SECONDS):taskQueue.take();
             if (task!=null){
                 System.out.println("从任务队列中取得线程");
                 return task;
@@ -205,7 +206,7 @@ public class SuyeThreadPool implements ExecutorService {
         Thread thread=Thread.currentThread();
         Runnable task=workThread.firstTask;
         workThread.firstTask=null;
-        while (task!=null || (task=getTask(workThread))!=null){
+        while (task!=null || (task=getTask(workThread,false))!=null){
             workThread.lock.lock();
             System.out.println("任务执行中");
             task.run();
@@ -223,6 +224,7 @@ public class SuyeThreadPool implements ExecutorService {
      * 终止线程池，让线程池不再接受新的任务
      * 但可以处理任务队列中的任务
      */
+    @Override
     public void shutdown() {
         suyeThreadPoolState.setPoolStateToStop();
     }
@@ -231,6 +233,7 @@ public class SuyeThreadPool implements ExecutorService {
      * 判断线程池是否被终止
      * @return
      */
+    @Override
     public boolean isShutdown() {
         return suyeThreadPoolState.getPoolState() >= suyeThreadPoolState.StopState();
     }
@@ -242,8 +245,10 @@ public class SuyeThreadPool implements ExecutorService {
      * @param <T>
      * @return
      */
+    @Override
     public <T>Future<T> submit(final Runnable task, final T result) {
         FutureTask<T> future=new FutureTask<T>(new Callable<T>() {
+            @Override
             public T call() throws Exception {
                 task.run();
                 return result;
@@ -280,6 +285,7 @@ public class SuyeThreadPool implements ExecutorService {
             lock=new ReentrantLock();
         }
 
+        @Override
         public void run() {
             try {
                 runWork(this);

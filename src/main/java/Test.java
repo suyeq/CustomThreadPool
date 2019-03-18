@@ -15,6 +15,7 @@ import java.util.concurrent.*;
  */
 public class Test {
     static class Task implements Runnable  {
+        @Override
         public void run() {
                 int n=10;
                 while (n>0){
@@ -39,6 +40,7 @@ public class Test {
 
 
     static class Task1 implements Runnable{
+        @Override
         public void run() {
             int n=10;
             while (n>0){
@@ -94,15 +96,15 @@ public class Test {
 
 
 
-    public static void main(String []args) throws InterruptedException {
-        SuyeThreadPool pool=new SuyeThreadPool(2,4, RejectionStrategy.ABANDONED);
-        pool.execute(new Task());
-        pool.execute(new Task1());
-        pool.execute(new Task1());
-        Thread.sleep(5000);
-        List<InterruptThreadMessage> list=pool.getMaybeNeedInterruptThread();
-        list.get(0).setThreadInterupte();
-        System.out.println("fsddfsdf"+list.get(0).getThreadName());
+    public static void main(String []args) throws InterruptedException, TimeoutException, ExecutionException {
+//        SuyeThreadPool pool=new SuyeThreadPool(2,4, RejectionStrategy.ABANDONED);
+//        pool.execute(new Task());
+//        pool.execute(new Task1());
+//        pool.execute(new Task1());
+//        Thread.sleep(5000);
+//        List<InterruptThreadMessage> list=pool.getMaybeNeedInterruptThread();
+//        list.get(0).setThreadInterupte();
+//        System.out.println("fsddfsdf"+list.get(0).getThreadName());
 //        System.out.println();
 //        Thread thread=list.get(0);
 //        System.out.println("dasdasda"+thread.getName());
@@ -110,6 +112,17 @@ public class Test {
 //        Object object=new Object();
 //        new Thread(new Task3(object)).start();
 //        new Thread(new Task4(object)).start();
+
+        FutureTask<String> futureTask=new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                System.out.println("啦啦啦啦啦");
+                //Thread.sleep(5000);
+                return "执行了";
+            }
+        });
+        //new Thread(futureTask).start();
+        futureTask.get(6,TimeUnit.SECONDS);
 
 
 
