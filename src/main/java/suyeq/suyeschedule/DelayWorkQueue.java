@@ -16,13 +16,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * @date: 2019-03-18
  * @time: 9:03
  */
-public class DelayWorkQueue<E> implements BlockingQueue<E> {
+public class DelayWorkQueue implements BlockingQueue<Runnable> {
 
     private final  static int  DEFAULTCAPACITY=1<<5;
 
     private volatile int size=0;
 
-    private ScheduledFuture [] queue=new ScheduledFuture[DEFAULTCAPACITY];
+    private ScheduledFutureTask [] queue=new ScheduledFutureTask[DEFAULTCAPACITY];
 
     private Lock lock=new ReentrantLock();
 
@@ -30,61 +30,84 @@ public class DelayWorkQueue<E> implements BlockingQueue<E> {
 
 
     @Override
-    public boolean add(E e) {
+    public boolean add(Runnable e) {
         return offer(e);
     }
 
     @Override
-    public boolean offer(E e) {
+    public boolean offer(Runnable e) {
         if (e==null){
             throw new NullPointerException();
         }
-        this.lock.lock();
+        lock.lock();
         if (size>=queue.length){
             //增长容器大小
         }
-
+        ScheduledFutureTask task= (ScheduledFutureTask) e;
+        queue[0]=task;
+        size++;
+        lock.unlock();
         return false;
     }
 
     @Override
-    public E remove() {
+    public Runnable take() throws InterruptedException {
+        try{
+            lock.lock();
+            while(true){
+                Runnable task=queue[0];
+                if (task==null){
+                    return null;
+                    //进入阻塞队列
+                }
+                long delay=((ScheduledFutureTask) task).getDelay(TimeUnit.NANOSECONDS);
+                if (delay<=0){
+                    return task;
+                }
+            }
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    private Runnable finishEndTask(Runnable task){
+        return null;
+    }
+
+
+    @Override
+    public Runnable remove() {
         return null;
     }
 
     @Override
-    public E poll() {
+    public Runnable poll() {
         return null;
     }
 
     @Override
-    public E element() {
+    public Runnable element() {
         return null;
     }
 
     @Override
-    public E peek() {
+    public Runnable peek() {
         return null;
     }
 
     @Override
-    public void put(E e) throws InterruptedException {
+    public void put(Runnable e) throws InterruptedException {
         offer(e);
     }
 
     @Override
-    public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
+    public boolean offer(Runnable e, long timeout, TimeUnit unit) throws InterruptedException {
         return offer(e);
     }
 
-    @Override
-    public E take() throws InterruptedException {
-
-        return null;
-    }
 
     @Override
-    public E poll(long timeout, TimeUnit unit) throws InterruptedException {
+    public Runnable poll(long timeout, TimeUnit unit) throws InterruptedException {
         return null;
     }
 
@@ -104,7 +127,7 @@ public class DelayWorkQueue<E> implements BlockingQueue<E> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(Collection<? extends Runnable> c) {
         return false;
     }
 
@@ -130,7 +153,7 @@ public class DelayWorkQueue<E> implements BlockingQueue<E> {
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size==0 ;
     }
 
     @Override
@@ -139,7 +162,7 @@ public class DelayWorkQueue<E> implements BlockingQueue<E> {
     }
 
     @Override
-    public Iterator<E> iterator() {
+    public Iterator<Runnable> iterator() {
         return null;
     }
 
@@ -154,12 +177,12 @@ public class DelayWorkQueue<E> implements BlockingQueue<E> {
     }
 
     @Override
-    public int drainTo(Collection<? super E> c) {
+    public int drainTo(Collection<? super Runnable> c) {
         return 0;
     }
 
     @Override
-    public int drainTo(Collection<? super E> c, int maxElements) {
+    public int drainTo(Collection<? super Runnable> c, int maxElements) {
         return 0;
     }
 }

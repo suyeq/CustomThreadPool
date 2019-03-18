@@ -17,10 +17,10 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
 
     private final int sortIndex;
 
-    public ScheduledFutureTask(Runnable task,V result,long ns,int sortIndex) {
-        super(task,result);
+    public ScheduledFutureTask(Runnable task,long ns,TimeUnit unit,int sortIndex) {
+        super(task,null);
         this.periodic=0;
-        this.delayTimes=ns;
+        this.delayTimes=TimeUnit.NANOSECONDS.convert(ns,unit)+now();
         this.sortIndex=sortIndex;
     }
 
@@ -50,7 +50,7 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
      */
     @Override
     public long getDelay(TimeUnit unit) {
-        return unit.convert(delayTimes,TimeUnit.NANOSECONDS);
+        return unit.convert(delayTimes-now(),TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -81,4 +81,11 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
         return -2;
     }
 
+    public long now(){
+        return System.nanoTime();
+    }
+
+    public int getSortIndex() {
+        return sortIndex;
+    }
 }

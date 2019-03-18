@@ -22,35 +22,35 @@ public class SuyeThreadPool implements ExecutorService {
     /**
      * 线程池最高效率执行的工作线程数
      */
-    private int bestPoolThreadSize;
+    protected int bestPoolThreadSize;
     /**
      * 线程池中活跃的最大工作者线程数量
      */
-    private int theMostPoolThreadSize;
+    protected int theMostPoolThreadSize;
     /**
      * 任务阻塞队列
      */
-    private final BlockingQueue<Runnable> taskQueue;
+    protected final BlockingQueue<Runnable> taskQueue;
     /**
      * 存放工作者线程的集合
      */
-    private final HashSet<WorkThread> workThreadSet;
+    protected final HashSet<WorkThread> workThreadSet;
     /**
      * 工作者线程的数量
      */
-    private volatile int workThreadSize;
+    protected volatile int workThreadSize;
     /**
      * 保存线程池的状态
      */
-    private final SuyeThreadPoolState suyeThreadPoolState;
+    protected final SuyeThreadPoolState suyeThreadPoolState;
 
     private final ThreadRepository threadRepository;
 
-    private final Lock mainLock=new ReentrantLock();
+    protected final Lock mainLock=new ReentrantLock();
 
-    private final Condition mainCondition=mainLock.newCondition();
+    protected final Condition mainCondition=mainLock.newCondition();
 
-    private int rejectStrategy;
+    protected int rejectStrategy;
 
     public SuyeThreadPool(){
         this.bestPoolThreadSize=Runtime.getRuntime().availableProcessors();
@@ -78,6 +78,16 @@ public class SuyeThreadPool implements ExecutorService {
         this.rejectStrategy=rejectStrategy;
         this.taskQueue=new LinkedBlockingQueue<Runnable>(taskQueueSize);
         this.workThreadSet=new HashSet<WorkThread>();
+        this.suyeThreadPoolState=SuyeThreadPoolState.getInstance();
+        this.threadRepository=ThreadRepository.newInstance();
+    }
+
+    public SuyeThreadPool(int bestPoolThreadSize,BlockingQueue blockingQueue){
+        this.bestPoolThreadSize=bestPoolThreadSize;
+        this.theMostPoolThreadSize=Integer.MAX_VALUE;
+        this.taskQueue=blockingQueue;
+        this.workThreadSet=new HashSet<WorkThread>();
+        rejectStrategy=1;
         this.suyeThreadPoolState=SuyeThreadPoolState.getInstance();
         this.threadRepository=ThreadRepository.newInstance();
     }
@@ -122,7 +132,7 @@ public class SuyeThreadPool implements ExecutorService {
      * @param firstTask
      * @return
      */
-    private boolean addWorkThread(Runnable firstTask){
+    protected boolean addWorkThread(Runnable firstTask){
 //        retry:
 //        for (;;){
             /**
@@ -186,10 +196,12 @@ public class SuyeThreadPool implements ExecutorService {
     private Runnable getTask(WorkThread workThread,boolean isLimitedTime) throws InterruptedException{
         while (true){
             if (taskQueue.isEmpty()){
+                System.out.println("任务队列为空");
                 reduceWorkThread(workThread);
                 return null;
             }
             Runnable task=isLimitedTime ? taskQueue.poll(3,TimeUnit.SECONDS):taskQueue.take();
+            System.out.println("将要判断任务是否为空");
             if (task!=null){
                 System.out.println("从任务队列中取得线程");
                 return task;
@@ -323,6 +335,14 @@ public class SuyeThreadPool implements ExecutorService {
         }
         mainLock.unlock();
         return list;
+    }
+
+    /**
+     * 返回任务队列
+     * @return
+     */
+    protected BlockingQueue getBlockQueue(){
+        return taskQueue;
     }
 
 }

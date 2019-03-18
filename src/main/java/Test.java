@@ -1,6 +1,7 @@
 import suyeq.InterruptThreadMessage;
 import suyeq.RejectionStrategy;
 import suyeq.SuyeThreadPool;
+import suyeq.suyeschedule.SuyeScheduleThreadPool;
 
 import java.util.Iterator;
 import java.util.List;
@@ -123,24 +124,32 @@ public class Test {
 //        });
 //        //new Thread(futureTask).start();
 //        futureTask.get(6,TimeUnit.SECONDS);
-        ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(1);
-        scheduledThreadPoolExecutor.schedule(new Runnable() {
+//        ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(1);
+//        scheduledThreadPoolExecutor.schedule(new Runnable() {
+//            @Override
+//            public void run() {
+//                System.out.println(Thread.currentThread().getName());
+//                System.out.println("这里是1");
+//            }
+//        },10,TimeUnit.SECONDS);
+//
+//        scheduledThreadPoolExecutor.schedule(new Runnable() {
+//            @Override
+//            public void run() {
+//                System.out.println(Thread.currentThread().getName());
+//                System.out.println("这里是2");
+//            }
+//        },10,TimeUnit.SECONDS);
+//        scheduledThreadPoolExecutor.shutdown();
+
+        SuyeScheduleThreadPool pool=new SuyeScheduleThreadPool(1);
+        pool.schedule(new Runnable() {
             @Override
             public void run() {
-                System.out.println(Thread.currentThread().getName());
-                System.out.println("这里是1");
+                System.out.println("Hello World!");
             }
-        },10,TimeUnit.SECONDS);
-
-        scheduledThreadPoolExecutor.schedule(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println(Thread.currentThread().getName());
-                System.out.println("这里是2");
-            }
-        },10,TimeUnit.SECONDS);
-        scheduledThreadPoolExecutor.shutdown();
-
+        },3,TimeUnit.SECONDS);
+       // ScheduledThreadPoolExecutor
 
     }
 }
