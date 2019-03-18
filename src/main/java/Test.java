@@ -1,6 +1,7 @@
 import suyeq.InterruptThreadMessage;
 import suyeq.RejectionStrategy;
 import suyeq.SuyeThreadPool;
+import suyeq.suyeschedule.ScheduledFutureTask;
 import suyeq.suyeschedule.SuyeScheduleThreadPool;
 
 import java.util.Iterator;
@@ -142,14 +143,27 @@ public class Test {
 //        },10,TimeUnit.SECONDS);
 //        scheduledThreadPoolExecutor.shutdown();
 
-        SuyeScheduleThreadPool pool=new SuyeScheduleThreadPool(1);
+        SuyeScheduleThreadPool pool=new SuyeScheduleThreadPool(3);
         pool.schedule(new Runnable() {
             @Override
             public void run() {
-                System.out.println("Hello World!");
+                System.out.println("Hello World1!");
+            }
+        },10,TimeUnit.SECONDS);
+
+        pool.schedule(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Hello World2!");
+            }
+        },8,TimeUnit.SECONDS);
+
+        pool.schedule(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Hello World3!");
             }
         },3,TimeUnit.SECONDS);
-       // ScheduledThreadPoolExecutor
 
     }
 }

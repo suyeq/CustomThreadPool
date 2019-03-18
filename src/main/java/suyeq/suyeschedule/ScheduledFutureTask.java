@@ -1,5 +1,6 @@
 package suyeq.suyeschedule;
 
+import java.util.Random;
 import java.util.concurrent.*;
 
 /**
@@ -15,13 +16,13 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
 
     private final long periodic;
 
-    private final int sortIndex;
+    //private final int sortIndex;
 
-    public ScheduledFutureTask(Runnable task,long ns,TimeUnit unit,int sortIndex) {
+    public ScheduledFutureTask(Runnable task,long ns,TimeUnit unit) {
         super(task,null);
         this.periodic=0;
         this.delayTimes=TimeUnit.NANOSECONDS.convert(ns,unit)+now();
-        this.sortIndex=sortIndex;
+        //this.sortIndex=sortIndex;
     }
 
     @Override
@@ -65,17 +66,17 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
     @Override
     public int compareTo(Delayed o) {
         if (o==this){
-            return -2;
+            return 0;
         }
         if (o instanceof ScheduledFuture){
             ScheduledFuture scheduledFuture=(ScheduledFuture)o;
             long timeSub=scheduledFuture.getDelay(TimeUnit.NANOSECONDS)-this.getDelay(TimeUnit.NANOSECONDS);
             if (timeSub>0){
-                return 1;
+                return -1;
             }else if (timeSub==0){
                 return 0;
             }else {
-                return -1;
+                return 1;
             }
         }
         return -2;
@@ -85,7 +86,14 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
         return System.nanoTime();
     }
 
-    public int getSortIndex() {
-        return sortIndex;
+    @Override
+    public int hashCode(){
+        int hash=5381;
+        Random rand =new Random(Integer.MAX_VALUE);
+        for (int i = 0; i < rand.nextInt(Integer.MAX_VALUE); ++i) {
+            hash=((hash<<5)+hash)+ rand.nextInt(Integer.MAX_VALUE);
+        }
+        return hash;
     }
+
 }

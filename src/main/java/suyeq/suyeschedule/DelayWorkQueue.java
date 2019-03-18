@@ -3,6 +3,7 @@ package suyeq.suyeschedule;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -18,11 +19,9 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class DelayWorkQueue implements BlockingQueue<Runnable> {
 
-    private final  static int  DEFAULTCAPACITY=1<<5;
-
     private volatile int size=0;
 
-    private ScheduledFutureTask [] queue=new ScheduledFutureTask[DEFAULTCAPACITY];
+    private BlockingQueue<ScheduledFutureTask> taskqueue=new PriorityBlockingQueue<ScheduledFutureTask>();
 
     private Lock lock=new ReentrantLock();
 
@@ -39,39 +38,34 @@ public class DelayWorkQueue implements BlockingQueue<Runnable> {
         if (e==null){
             throw new NullPointerException();
         }
-        lock.lock();
-        if (size>=queue.length){
-            //增长容器大小
-        }
         ScheduledFutureTask task= (ScheduledFutureTask) e;
-        queue[0]=task;
+        taskqueue.offer(task);
+        lock.lock();
         size++;
         lock.unlock();
-        return false;
+        return true;
     }
 
     @Override
     public Runnable take() throws InterruptedException {
         try{
-            lock.lock();
             while(true){
-                Runnable task=queue[0];
+                lock.lock();
+                Runnable task=taskqueue.peek();
                 if (task==null){
+                    System.out.println("取得任务失败，优先队列为null");
                     return null;
-                    //进入阻塞队列
                 }
                 long delay=((ScheduledFutureTask) task).getDelay(TimeUnit.NANOSECONDS);
                 if (delay<=0){
-                    return task;
+                    size--;
+                    return taskqueue.take();
                 }
+                lock.unlock();
             }
         }finally {
             lock.unlock();
         }
-    }
-
-    private Runnable finishEndTask(Runnable task){
-        return null;
     }
 
 

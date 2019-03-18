@@ -20,7 +20,7 @@ public class SuyeScheduleThreadPool extends SuyeThreadPool implements ScheduledE
 
     @Override
     public void schedule(Runnable task, long time, TimeUnit unit) {
-        super.getBlockQueue().offer(new ScheduledFutureTask<Void>(task,time,unit,0));
+        super.getBlockQueue().offer(new ScheduledFutureTask<Void>(task,time,unit));
         executeDelay();
     }
 
