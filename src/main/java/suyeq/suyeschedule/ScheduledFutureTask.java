@@ -83,7 +83,7 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
      */
     @Override
     public long getDelay(TimeUnit unit) {
-        return unit.convert(delayTimes-now(),TimeUnit.NANOSECONDS);
+        return unit.convert(delayTimes-now()+1000*1000,TimeUnit.NANOSECONDS);
     }
 
     /**

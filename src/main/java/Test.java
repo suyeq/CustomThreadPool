@@ -96,6 +96,8 @@ public class Test {
         System.out.println(future.get());
          */
 
+        /**
+         * 周期任务测试
         SuyeScheduleThreadPool pool=new SuyeScheduleThreadPool(1);
         pool.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -110,5 +112,6 @@ public class Test {
                 System.out.println("Hello World2");
             }
         },5,TimeUnit.SECONDS);
+         */
     }
 }

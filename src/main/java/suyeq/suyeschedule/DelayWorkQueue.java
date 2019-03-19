@@ -84,6 +84,7 @@ public class DelayWorkQueue implements BlockingQueue<Runnable> {
         if (task.isPeriodic()){
             task.calculateNextDelay();
             Runnable newTask=taskqueue.take();
+            System.out.println(((ScheduledFutureTask) newTask).getDelay(TimeUnit.SECONDS));
             taskqueue.offer((ScheduledFutureTask)newTask);
             return newTask;
         }
