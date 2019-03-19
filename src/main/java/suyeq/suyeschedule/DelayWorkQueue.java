@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -64,14 +63,32 @@ public class DelayWorkQueue implements BlockingQueue<Runnable> {
                 }
                 long delay=((ScheduledFutureTask) task).getDelay(TimeUnit.NANOSECONDS);
                 if (delay<=0){
-                    size--;
-                    return taskqueue.take();
+                    return finishTake((ScheduledFutureTask)task);
                 }
                 lock.unlock();
             }
         }finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * 判断是否需要周期执行
+     * 是，则将定时重置，取出任务再次加入优先队列重新排序
+     * 否则直接返回
+     * @param task
+     * @return
+     * @throws InterruptedException
+     */
+    public Runnable finishTake(ScheduledFutureTask task) throws InterruptedException {
+        if (task.isPeriodic()){
+            task.calculateNextDelay();
+            Runnable newTask=taskqueue.take();
+            taskqueue.offer((ScheduledFutureTask)newTask);
+            return newTask;
+        }
+        size--;
+        return taskqueue.take();
     }
 
 

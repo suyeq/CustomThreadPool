@@ -16,23 +16,38 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
 
     private final long periodic;
 
+    private final long cycleTimes;
+
+    private final TimeUnit unit;
+
     //private final int sortIndex;
 
     public ScheduledFutureTask(Runnable task,long ns,TimeUnit unit) {
         super(task,null);
         this.periodic=0;
+        this.cycleTimes=0;
+        this.unit=unit;
         this.delayTimes=TimeUnit.NANOSECONDS.convert(ns,unit)+now();
+        //this.sortIndex=sortIndex;
+    }
+
+    public ScheduledFutureTask(Runnable task,long ns,long cycleTimes,TimeUnit unit) {
+        super(task,null);
+        this.periodic=1;
+        this.cycleTimes=cycleTimes;
+        this.unit=unit;
+        this.delayTimes=TimeUnit.NANOSECONDS.convert(cycleTimes,unit)+now();
         //this.sortIndex=sortIndex;
     }
 
     public ScheduledFutureTask(Callable task,long ns,TimeUnit unit) {
         super(task);
         this.periodic=0;
+        this.cycleTimes=0;
+        this.unit=unit;
         this.delayTimes=TimeUnit.NANOSECONDS.convert(ns,unit)+now();
         //this.sortIndex=sortIndex;
     }
-
-
 
     @Override
     public void run(){
@@ -41,6 +56,7 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
             super.run();
         }else if (isPeriodic){
             //执行周期性任务
+            super.runAndReset();
         }
     }
 
@@ -51,6 +67,13 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
     @Override
     public boolean isPeriodic() {
         return this.periodic!=0;
+    }
+
+    /**
+     * 计算周期任务下次执行时间
+     */
+    public void calculateNextDelay(){
+       this.delayTimes=now()+TimeUnit.NANOSECONDS.convert(cycleTimes,this.unit);
     }
 
     /**
@@ -91,6 +114,10 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
         return -2;
     }
 
+    /**
+     * 以纳秒的方式返回当前时间
+     * @return
+     */
     public long now(){
         return System.nanoTime();
     }

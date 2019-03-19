@@ -63,9 +63,16 @@ public class SuyeScheduleThreadPool extends SuyeThreadPool implements ScheduledE
         return future;
     }
 
+    /**
+     * 周期任务
+     * @param task
+     * @param time
+     * @param unit
+     */
     @Override
     public void scheduleAtFixedRate(Runnable task, long time, TimeUnit unit) {
-
+        super.getBlockQueue().offer(new ScheduledFutureTask<Void>(task,0,time,unit));
+        executeDelay();
     }
 
     @Override
