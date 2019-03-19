@@ -2,6 +2,7 @@ package suyeq.suyeschedule;
 
 import suyeq.ExecutorService;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +32,7 @@ public interface ScheduledExecutorService extends ExecutorService {
      * @param <T>
      * @return
      */
-     <T> Future<T> schedule(Runnable task, long time, TimeUnit unit,T result);
+     <T> Future<T> schedule(Runnable task, long time, TimeUnit unit, T result);
 
     /**
      * 周期任务

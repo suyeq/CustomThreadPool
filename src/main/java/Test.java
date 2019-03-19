@@ -165,5 +165,12 @@ public class Test {
             }
         },3,TimeUnit.SECONDS);
 
+        Future<String> future=pool.schedule(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Hello World4!");
+            }
+        },6,TimeUnit.SECONDS,"Hello");
+        System.out.println(future.get());
     }
 }

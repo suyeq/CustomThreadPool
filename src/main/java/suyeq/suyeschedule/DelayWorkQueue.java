@@ -46,6 +46,12 @@ public class DelayWorkQueue implements BlockingQueue<Runnable> {
         return true;
     }
 
+    /**
+     * 锁必须尽可能的小
+     * 否则会影响到定时的精度
+     * @return
+     * @throws InterruptedException
+     */
     @Override
     public Runnable take() throws InterruptedException {
         try{
@@ -142,7 +148,7 @@ public class DelayWorkQueue implements BlockingQueue<Runnable> {
 
     @Override
     public int size() {
-        return 0;
+        return taskqueue.size();
     }
 
     @Override

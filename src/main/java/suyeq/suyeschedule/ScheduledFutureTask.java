@@ -25,6 +25,15 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
         //this.sortIndex=sortIndex;
     }
 
+    public ScheduledFutureTask(Callable task,long ns,TimeUnit unit) {
+        super(task);
+        this.periodic=0;
+        this.delayTimes=TimeUnit.NANOSECONDS.convert(ns,unit)+now();
+        //this.sortIndex=sortIndex;
+    }
+
+
+
     @Override
     public void run(){
         boolean isPeriodic=isPeriodic();
@@ -45,7 +54,7 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
     }
 
     /**
-     * 按纳秒的时间返回延迟的时间
+     * 按纳秒的时间距离到达还剩余的时间
      * @param unit
      * @return
      */
@@ -56,8 +65,8 @@ public class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableSch
 
     /**
      * 返回0表示延迟相等
-     * 1表示该延迟大于当前Future延迟
-     * -1表示延迟小于
+     * -1表示该延迟大于当前Future延迟
+     * 1表示延迟小于
      * -2表示该延迟是自身或者
      * 传入的不是ScheduledFutureTask对象
      * @param o
